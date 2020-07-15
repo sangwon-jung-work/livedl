@@ -62,7 +62,7 @@ type NicoHls struct {
 	startDelay int
 	playlist   playlist
 
-	broadcastId string
+	nicoliveProgramId string
 	webSocketUrl      string
 	myUserId          string
 
@@ -122,9 +122,9 @@ func debug_Now() string {
 }
 func NewHls(opt options.Option, prop map[string]interface{}) (hls *NicoHls, err error) {
 
-	broadcastId, ok := prop["broadcastId"].(string)
+	nicoliveProgramId, ok := prop["nicoliveProgramId"].(string)
 	if !ok {
-		err = fmt.Errorf("broadcastId is not string")
+		err = fmt.Errorf("nicoliveProgramId is not string")
 		return
 	}
 
@@ -152,7 +152,7 @@ func NewHls(opt options.Option, prop map[string]interface{}) (hls *NicoHls, err 
 
 	if wsapi == 2 && false && !timeshift {
 		if m := regexp.MustCompile(`/watch/([^?]+)`).FindStringSubmatch(webSocketUrl); len(m) > 0 {
-			broadcastId = m[1]
+			nicoliveProgramId = m[1]
 		}
 		webSocketUrl = strings.Replace(webSocketUrl, "/wsapi/v2/", "/wsapi/v1/", 1)
 		wsapi = 1
@@ -160,8 +160,8 @@ func NewHls(opt options.Option, prop map[string]interface{}) (hls *NicoHls, err 
 	}
 
 	var pid string
-	if broadcastId, ok := prop["broadcastId"]; ok {
-		pid, _ = broadcastId.(string)
+	if nicoliveProgramId, ok := prop["nicoliveProgramId"]; ok {
+		pid, _ = nicoliveProgramId.(string)
 	}
 
 	var uname string // ユーザ名
@@ -267,7 +267,7 @@ func NewHls(opt options.Option, prop map[string]interface{}) (hls *NicoHls, err 
 	hls = &NicoHls{
 		wsapi: wsapi,
 
-		broadcastId: broadcastId,
+		nicoliveProgramId: nicoliveProgramId,
 		webSocketUrl:      webSocketUrl,
 		myUserId:          myUserId,
 
@@ -2107,7 +2107,7 @@ func NicoRecHls(opt options.Option) (done, playlistEnd, notLogin, reserved bool,
 		"comId": []string{"community", "id"}, // "co\d+"
 		// "program"
 		"beginTime": []string{"program", "beginTime"}, // integer
-		"broadcastId":       []string{"program", "broadcastId"},         // "\d+"
+		//"broadcastId":       []string{"program", "broadcastId"},         // "\d+"
 		"description":       []string{"program", "description"},         // 放送説明
 		"endTime":           []string{"program", "endTime"},             // integer
 		"isFollowerOnly":    []string{"program", "isFollowerOnly"},      // bool
@@ -2142,6 +2142,11 @@ func NicoRecHls(opt options.Option) (done, playlistEnd, notLogin, reserved bool,
 		v, ok := objs.Find(props, a...)
 		if ok {
 			kv[k] = v
+
+			if opt.NicoDebug {
+				fmt.Println(k, v)
+				fmt.Println("----------")
+			}
 		}
 	}
 
@@ -2156,7 +2161,7 @@ func NicoRecHls(opt options.Option) (done, playlistEnd, notLogin, reserved bool,
 
 	} else {
 		for _, k := range []string{
-			"broadcastId",
+			"nicoliveProgramId",
 			"//webSocketUrl",
 			//"//myId",
 		} {
